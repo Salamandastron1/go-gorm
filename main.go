@@ -22,25 +22,15 @@ func main() {
 	}
 
 	fmt.Println("Database connection", db)
+	db.AutoMigrate(&User{})
+
 	users := []string{
 		"John Doe",
 		"Tim Garrity",
 		"Alex Rodriguez",
 	}
-	db.AutoMigrate(&User{})
 
-	for _, v := range users {
-		user := strings.Split(v, " ")
-		db.Create(createUser(user[0], user[1]))
-	}
-
-	// db.Create(createUser("John", "Doe"))
-	// user := createUser("John 2", "doe 2")
-	// user.ID = 2
-	// db.Updates(user)
-	// db.Delete(&User{ID: 1})
-	// db.Delete(&User{ID: 2})
-	// db.Delete(&User{ID: 3})
+	createUsers(users, db)
 
 }
 
@@ -50,5 +40,12 @@ func createUser(first, last string) *User {
 		FirstName: first,
 		LastName:  last,
 		Email:     fmt.Sprintf("%s@%s.com", first, last),
+	}
+}
+
+func createUsers(users []string, db *gorm.DB) {
+	for _, v := range users {
+		user := strings.Split(v, " ")
+		db.Create(createUser(user[0], user[1]))
 	}
 }
