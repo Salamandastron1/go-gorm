@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"database/sql"
 
@@ -12,10 +11,17 @@ import (
 )
 
 type User struct {
-	gorm.Model
+	ID        uint
 	FirstName sql.NullString `gorm:"type:VARCHAR(30); null"`
 	LastName  sql.NullString `gorm:"size:100; default:'Smith"`
 	Email     sql.NullString `gorm:"unique; not null"`
+	Address   Address        `gorm:"foreignKey:UserID"`
+}
+
+type Address struct {
+	ID     uint
+	Name   string
+	UserID uint
 }
 
 func main() {
@@ -25,8 +31,8 @@ func main() {
 	}
 
 	fmt.Println("Database connection", db)
-	db.Migrator().DropTable(&User{})
-	db.Migrator().CreateTable(&User{})
+	db.Migrator().DropTable(&User{}, &Address{})
+	db.Migrator().CreateTable(&User{}, &Address{})
 
 	user := createUser("Thony", "Namaste")
 	fmt.Println(user)
@@ -38,18 +44,21 @@ func main() {
 			Valid:  true,
 		},
 	})
+	u := User{}
+	db.First(&u)
+	fmt.Println(u)
 
 }
 
 func createUser(first, last string) *User {
 
 	return &User{
-		Model: gorm.Model{
-			CreatedAt: time.Now(),
-		},
 		FirstName: sql.NullString{String: first, Valid: true},
 		LastName:  sql.NullString{String: last, Valid: true},
 		Email:     sql.NullString{String: fmt.Sprintf("%s@%s.com", first, last), Valid: true},
+		Address: Address{
+			Name: "thony street",
+		},
 	}
 }
 
