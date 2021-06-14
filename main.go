@@ -5,15 +5,17 @@ import (
 	"strings"
 	"time"
 
+	"database/sql"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 type User struct {
 	gorm.Model
-	FirstName string `gorm:"type:VARCHAR(30)"`
-	LastName  string
-	Email     string `gorm:"unique"`
+	FirstName sql.NullString `gorm:"type:VARCHAR(30); null"`
+	LastName  sql.NullString `gorm:"size:100; default:'Smith"`
+	Email     sql.NullString `gorm:"unique; not null"`
 }
 
 func main() {
@@ -23,11 +25,20 @@ func main() {
 	}
 
 	fmt.Println("Database connection", db)
-	db.AutoMigrate(&User{})
+	db.Migrator().DropTable(&User{})
+	db.Migrator().CreateTable(&User{})
 
 	user := createUser("Thony", "Namaste")
-
 	fmt.Println(user)
+
+	db.Create(user)
+	db.Create(&User{
+		Email: sql.NullString{
+			String: "fake@email.com",
+			Valid:  true,
+		},
+	})
+
 }
 
 func createUser(first, last string) *User {
@@ -36,9 +47,9 @@ func createUser(first, last string) *User {
 		Model: gorm.Model{
 			CreatedAt: time.Now(),
 		},
-		FirstName: first,
-		LastName:  last,
-		Email:     fmt.Sprintf("%s@%s.com", first, last),
+		FirstName: sql.NullString{String: first, Valid: true},
+		LastName:  sql.NullString{String: last, Valid: true},
+		Email:     sql.NullString{String: fmt.Sprintf("%s@%s.com", first, last), Valid: true},
 	}
 }
 
