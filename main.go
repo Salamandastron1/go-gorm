@@ -3,16 +3,17 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 type User struct {
-	ID        int
-	FirstName string
+	gorm.Model
+	FirstName string `gorm:"type:VARCHAR(30)"`
 	LastName  string
-	Email     string
+	Email     string `gorm:"unique"`
 }
 
 func main() {
@@ -24,19 +25,17 @@ func main() {
 	fmt.Println("Database connection", db)
 	db.AutoMigrate(&User{})
 
-	users := []string{
-		"John Doe",
-		"Tim Garrity",
-		"Alex Rodriguez",
-	}
+	user := createUser("Thony", "Namaste")
 
-	createUsers(users, db)
-
+	fmt.Println(user)
 }
 
 func createUser(first, last string) *User {
 
 	return &User{
+		Model: gorm.Model{
+			CreatedAt: time.Now(),
+		},
 		FirstName: first,
 		LastName:  last,
 		Email:     fmt.Sprintf("%s@%s.com", first, last),
