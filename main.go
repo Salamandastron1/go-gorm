@@ -15,13 +15,12 @@ type User struct {
 	FirstName sql.NullString `gorm:"type:VARCHAR(30); null"`
 	LastName  sql.NullString `gorm:"size:100; default:'Smith"`
 	Email     sql.NullString `gorm:"unique; not null"`
-	Address   Address        `gorm:"foreignKey:UserID"`
+	Book      []Book         `gorm:"many2many:user_books"`
 }
 
-type Address struct {
-	ID     uint
-	Name   string
-	UserID uint
+type Book struct {
+	ID    uint
+	Title sql.NullString
 }
 
 func main() {
@@ -29,24 +28,16 @@ func main() {
 	if err != nil {
 		panic("Could not connect with Database")
 	}
-
-	fmt.Println("Database connection", db)
-	db.Migrator().DropTable(&User{}, &Address{})
-	db.Migrator().CreateTable(&User{}, &Address{})
+	db.Migrator().DropTable(&User{}, &Book{})
+	db.AutoMigrate(&User{}, &Book{})
 
 	user := constructUser("Thony", "Namaste")
-	fmt.Println(user)
-
 	db.Create(user)
-	db.Create(&User{
-		Email: sql.NullString{
-			String: "fake@email.com",
-			Valid:  true,
-		},
-	})
+	fmt.Println(user)
 	u := User{}
-	db.Preload("Address").First(&u)
-	fmt.Println(u)
+	db.Preload("Book").First(&u)
+
+	fmt.Println("end", &u)
 
 }
 
@@ -56,10 +47,17 @@ func constructUser(first, last string) *User {
 		FirstName: sql.NullString{String: first, Valid: true},
 		LastName:  sql.NullString{String: last, Valid: true},
 		Email:     sql.NullString{String: fmt.Sprintf("%s@%s.com", first, last), Valid: true},
-		Address: Address{
-			Name: "thony street",
-		},
+		Book:      constructBooks([]string{"Eragon", "Warriors", "War and Peace", "Accelerate"}),
 	}
+}
+
+func constructBooks(titles []string) []Book {
+	books := []Book{}
+	for _, v := range titles {
+		books = append(books, Book{Title: sql.NullString{String: v, Valid: true}})
+	}
+
+	return books
 }
 
 func createUsers(users []string, db *gorm.DB) {
