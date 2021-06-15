@@ -30,10 +30,17 @@ func main() {
 	}
 	db.Migrator().DropTable(&User{}, &Book{})
 	db.AutoMigrate(&User{}, &Book{})
+	users := []string{
+		"Thony Namaste",
+		"Angel Ortiz",
+		"Nikisha Guadalupe",
+		"Randles Carington",
+		"Timsey Lohan",
+		"Sophia LoveYouLongTime",
+		"Karry Unicorn",
+	}
+	createUsers(users, db)
 
-	user := constructUser("Thony", "Namaste")
-	db.Create(user)
-	fmt.Println(user)
 	u := User{}
 	db.Preload("Book").First(&u)
 
