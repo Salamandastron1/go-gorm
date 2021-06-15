@@ -34,7 +34,7 @@ func main() {
 	db.Migrator().DropTable(&User{}, &Address{})
 	db.Migrator().CreateTable(&User{}, &Address{})
 
-	user := createUser("Thony", "Namaste")
+	user := constructUser("Thony", "Namaste")
 	fmt.Println(user)
 
 	db.Create(user)
@@ -45,12 +45,12 @@ func main() {
 		},
 	})
 	u := User{}
-	db.First(&u)
+	db.Preload("Address").First(&u)
 	fmt.Println(u)
 
 }
 
-func createUser(first, last string) *User {
+func constructUser(first, last string) *User {
 
 	return &User{
 		FirstName: sql.NullString{String: first, Valid: true},
@@ -65,6 +65,6 @@ func createUser(first, last string) *User {
 func createUsers(users []string, db *gorm.DB) {
 	for _, v := range users {
 		user := strings.Split(v, " ")
-		db.Create(createUser(user[0], user[1]))
+		db.Create(constructUser(user[0], user[1]))
 	}
 }
