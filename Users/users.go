@@ -42,11 +42,14 @@ func constructBooks(titles []string) []Book {
 }
 
 // CreateUsers takes in a list of user and stores them in a database
-func CreateUsers(users []string, db *gorm.DB) {
+func CreateUsers(users []string, db *gorm.DB) error {
 	db.Migrator().DropTable(&User{}, &Book{})
 	db.AutoMigrate(&User{}, &Book{})
 	for _, v := range users {
 		user := strings.Split(v, " ")
+		if len(user) > 2 {
+			return fmt.Errorf("invalid naming scheme, first and last only")
+		}
 		db.Create(constructUser(user[0], user[1]))
 	}
 
@@ -54,4 +57,6 @@ func CreateUsers(users []string, db *gorm.DB) {
 	db.Preload("Book").First(&u)
 
 	fmt.Println("end", &u)
+
+	return nil
 }
