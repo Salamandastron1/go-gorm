@@ -4,21 +4,17 @@ import (
 	users "github/salamandastron1/go-basics/Users"
 	"testing"
 
+	"github.com/brianvoe/gofakeit/v6"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-func createUsers() []string {
-	return []string{
-		"Tim Garrity",
-		"Thony Namaste",
-		"Angel Ortiz",
-		"Nikisha Guadalupe",
-		"Randles Carington",
-		"Timsey Lohan",
-		"Sophia LoveYouLongTime",
-		"Karry Unicorn",
+func generateRandomNames() []string {
+	var names []string
+	for i := 0; i < gofakeit.Number(0, 20); i++ {
+		names = append(names, gofakeit.Name())
 	}
+	return names
 }
 
 func TestCreateUsers(t *testing.T) {
@@ -26,31 +22,36 @@ func TestCreateUsers(t *testing.T) {
 	if err != nil {
 		panic("Could not connect with Database")
 	}
+
 	cases := []struct {
-		name     string
-		expected string
-		err      bool
-		users    []string
+		name  string
+		err   bool
+		names []string
 	}{
 		{
-			name:     "Users are put into sequentially",
-			expected: "Tim Garrity",
-			err:      false,
-			users:    createUsers(),
+			name:  "Users are put into sequentially",
+			err:   false,
+			names: generateRandomNames(),
 		},
 		{
-			name:     "User is submitted with more than first and last name",
-			expected: "Tim Garrity",
-			err:      true,
-			users:    createUsers(),
+			name:  "User is submitted with more than first and last name",
+			err:   true,
+			names: (append(generateRandomNames(), "Meow mix Meow")),
 		},
 	}
 
 	for _, v := range cases {
-		err := users.CreateUsers(v.users, db)
+		err := users.CreateUsers(v.names, db)
 
 		if err != nil && v.err == false {
 			t.Errorf("Unexpected failure; output is %v", err)
+		}
+
+		u := users.User{}
+		db.Preload("Book").First(&u)
+		uName := u.FirstName.String + " " + u.LastName.String
+		if v.names[0] != uName {
+			t.Errorf("Database corrupted, non sequential addition found %v", uName)
 		}
 	}
 }
